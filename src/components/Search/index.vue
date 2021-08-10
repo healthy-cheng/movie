@@ -1,0 +1,158 @@
+<template>
+    <div class="search_body">
+        <div class="search_input">
+            <div class="search_input_wrapper">
+                <i class="iconfont icon-sousuo"></i>
+                <input type="text" v-model="message">
+            </div>
+        </div>
+        <div class="search_result">
+            <h3>电影/电视剧/综艺</h3>
+            <Loading v-if="isLoading" />
+            <Scroller v-else >
+            <ul>
+                <li v-for="data in moviesList" :key="data.id">
+                    <div class="img">
+                        <img :src="data.img | setWH('128.180')" alt="图片">
+                    </div>
+                    <div class="info">
+                        <p><span class="info_name">{{data.nm}}</span><span>{{data.sc}}</span></p>
+                        <p><span class="info_act">主演：{{data.act}}</span></p>
+                        <p>{{data.cat}}</p>
+                        <p>{{data.rt}}</p>
+                    </div>
+                </li>
+            </ul>
+            </Scroller>
+        </div>
+    </div>
+</template>
+
+<script>
+export default {
+  data() {
+    return {
+      message: '',
+      moviesList: [],
+      isLoading: true
+    }
+  },
+  methods: {
+    cancelRequest() {
+      if (typeof this.source === 'function') {
+        this.source('终止请求')
+      }
+    }
+  },
+  watch: {
+    message(newVal) {
+      var that = this
+      this.cancelRequest()
+      this.axios('/ajax/search?kw=' + newVal + '&cityId=119&stype=-1', {
+        cancelToken: new this.axios.CancelToken(function (c) {
+          that.source = c
+        })
+      }).then(res => {
+        var msg = res.statusText
+        var moList = res.data.movies.list
+        if (msg && moList) {
+          this.moviesList = res.data.movies.list
+          this.isLoading = false
+        }
+      }).catch((err) => {
+        if (this.axios.isCancel(err)) {
+          console.log('Rquest canceled', err.message)
+        } else {
+          console.log(err)
+        }
+      })
+    }
+  }
+}
+</script>
+
+<style lang="scss" scoped>
+#content .search_body{
+    flex: 1;
+    overflow: auto;
+}
+.search_body .search_input{
+    padding: 8px 10px;
+    background-color: #f5f5f5;
+    border-bottom: 1px solid #e5e5e5;
+}
+.search_body .search_input_wrapper{
+    padding: 0 10px;
+    border: 1px solid #e6e6e6;
+    border-radius: 5px;
+    background-color: #fff;
+    display: flex;
+    line-height: 22px;
+}
+.search_body .search_input_wrapper i{
+    font-size: 16px;
+    padding: 4px 0;
+}
+.search_body .search_input_wrapper input{
+    border: none;
+    font-size: 13px;
+    color: #333;
+    padding: 4px 0;
+    outline: none;
+    margin-left: 5px;
+    width: 100%;
+}
+.search_body .search_result h3{
+    font-size: 15px;
+    color: #999;
+    padding: 9px 15px;
+    border-bottom: 1px solid #e6e6e6;
+}
+.search_body .search_result li{
+    border-bottom: 1px dashed #c9c9c9;
+    padding: 10px 15px;
+    box-sizing: border-box;
+    display: flex;
+}
+.search_body .search_result .img{
+    width: 60px;
+    float: left;
+}
+.search_body .search_result .img img{
+    width: 100%;
+}
+.search_body .search_result .info{
+    float: left;
+    margin-left: 15px;
+    flex: 1;
+}
+.search_body .search_result .info .info_name{
+    font-size: 17px;
+    line-height: 24px;
+    width: 150px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+.search_body .search_result .info .info_act{
+    color: #666;
+    width: 250px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+.search_body .search_result .info p{
+    height: 22px;
+    display: flex;
+    line-height: 22px;
+    font-size: 12px;
+}
+.search_body .search_result .info p:nth-of-type(1) span:nth-of-type(1){
+    font-size: 18px;
+    flex: 1;
+}
+.search_body .search_result .info p:nth-of-type(1) span:nth-of-type(2){
+    font-size: 16px;
+    color: #fc7103;
+}
+</style>
